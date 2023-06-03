@@ -19,7 +19,7 @@ export class DiscordBotService {
   public async onReady(@Context() [client]: ContextOf<'ready'>) {
     this.logger.log(`Bot logged in as ${client.user.username}`);
 
-    new Scheduler('0 * * * * *', async () => {
+    new Scheduler(process.env.DISCORD_DASHBOARD_INTERVAL, async () => {
       const users = await this.userService.fetchUsersFromOrg();
 
       users.forEach(async (user) => {
@@ -39,7 +39,7 @@ export class DiscordBotService {
       this.dashboardService.updater(client, users);
     });
 
-    new Scheduler('0 * * * * *', async () => {
+    new Scheduler(process.env.DISCORD_DASHBOARD_DIRECT_INTERVAL, async () => {
       const users = await this.userService.fetchUsersFromOrg();
 
       users.forEach(async (user) => {
