@@ -19,7 +19,7 @@ export class DiscordBotService {
   public async onReady(@Context() [client]: ContextOf<'ready'>) {
     this.logger.log(`Bot logged in as ${client.user.username}`);
 
-    new Scheduler('*/30 * * * * *', async () => {
+    new Scheduler('0 * * * * *', async () => {
       const users = await this.userService.fetchUsersFromOrg();
 
       users.forEach(async (user) => {
@@ -37,6 +37,26 @@ export class DiscordBotService {
       });
 
       this.dashboardService.updater(client, users);
+    });
+
+    new Scheduler('0 * * * * *', async () => {
+      const users = await this.userService.fetchUsersFromOrg();
+
+      users.forEach(async (user) => {
+        if (!user.discordId) {
+          this.logger.error(
+            `${user.username} has no discord id, cant link him to a discord user`,
+          );
+        } else {
+          users.forEach(async (orgUser) => {
+            if (orgUser.id == user.id) {
+              orgUser.discordId = user.discordId;
+            }
+          });
+        }
+      });
+
+      this.dashboardService.spammer(client, users);
     });
   }
 
