@@ -1,7 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { DatabaseService } from 'src/database/database.service';
 import { User } from '@prisma/client';
 import OrgMember from './userTypes';
+import { exit } from 'process';
 
 @Injectable()
 export class UserService {
@@ -30,39 +31,53 @@ export class UserService {
   }
 
   async fetchUsersFromOrg() {
-    const { GITEA_URL, GITEA_REPO_OWNER, GITEA_AUTH_TOKEN } = process.env;
+    try {
+      const { GITEA_URL, GITEA_REPO_OWNER, GITEA_AUTH_TOKEN } = process.env;
 
-    const url = new URL(
-      `http://${GITEA_URL}/api/v1/orgs/${GITEA_REPO_OWNER}/members`,
-    );
+      const url = new URL(
+        `http://${GITEA_URL}/api/v1/orgs/${GITEA_REPO_OWNER}/members`,
+      );
 
-    const params = new URLSearchParams();
-    params.append('token', GITEA_AUTH_TOKEN);
+      const params = new URLSearchParams();
+      params.append('token', GITEA_AUTH_TOKEN);
 
-    url.search = params.toString();
+      url.search = params.toString();
 
-    const orgMembers: OrgMember[] = await (await fetch(url)).json();
+      const orgMembers: OrgMember[] = await (await fetch(url)).json();
 
-    const users: User[] = await Promise.all(
-      orgMembers.map(async (member: any) => {
-        return await this.databaseService.user.upsert({
-          where: { id: member.id },
-          create: {
-            id: member.id,
-            username: member.username,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-          update: {
-            id: member.id,
-            username: member.username,
-            updatedAt: new Date(),
-          },
-        });
-      }),
-    );
+      const users: User[] = await Promise.all(
+        orgMembers.map(async (member: any) => {
+          return await this.databaseService.user.upsert({
+            where: { id: member.id },
+            create: {
+              id: member.id,
+              username: member.username,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+            update: {
+              id: member.id,
+              username: member.username,
+              updatedAt: new Date(),
+            },
+          });
+        }),
+      );
 
-    return users;
+      return users;
+    } catch (error) {
+      this.logger.error(`Error while fetching users from org`);
+
+      if (typeof error == typeof BadRequestException) {
+        this.logger.error(
+          `The error is a BadRequestException, is the environment variables correctly set?`,
+        );
+      } else {
+        this.logger.error(``);
+      }
+
+      process.exit(1);
+    }
   }
 
   async remove(id: number) {
