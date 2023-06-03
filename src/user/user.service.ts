@@ -1,30 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DatabaseService } from 'src/database/database.service';
 import { User } from '@prisma/client';
-
-type OrgMember = {
-  id: number;
-  login: string;
-  login_name: string;
-  full_name: string;
-  email: string;
-  avatar_url: string;
-  language: string;
-  is_admin: true;
-  last_login: string;
-  created: string;
-  restricted: false;
-  active: true;
-  prohibit_login: false;
-  location: string;
-  website: string;
-  description: string;
-  visibility: string;
-  followers_count: 0;
-  following_count: 0;
-  starred_repos_count: 0;
-  username: string;
-};
+import OrgMember from './userTypes';
 
 @Injectable()
 export class UserService {
@@ -53,8 +30,8 @@ export class UserService {
   }
 
   async fetchUsersFromOrg() {
-    const { GITEA_URL, GITEA_REPO_OWNER, GITEA_REPO_NAME, GITEA_AUTH_TOKEN } =
-      process.env;
+    const { GITEA_URL, GITEA_REPO_OWNER, GITEA_AUTH_TOKEN } = process.env;
+
     const url = new URL(
       `http://${GITEA_URL}/api/v1/orgs/${GITEA_REPO_OWNER}/members`,
     );
@@ -65,8 +42,6 @@ export class UserService {
     url.search = params.toString();
 
     const orgMembers: OrgMember[] = await (await fetch(url)).json();
-
-    console.log(orgMembers);
 
     const users: User[] = await Promise.all(
       orgMembers.map(async (member: any) => {

@@ -6,6 +6,7 @@ import { NecordModule } from 'necord';
 import { ScheduleModule } from '@nestjs/schedule/dist/schedule.module';
 import { DiscordBotConfigService } from './DiscordBotConfig.service';
 import { IssueService } from './Issue/issue.service';
+import { DashboardService } from './Dashboard/Dashboard.service';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { IssueService } from './Issue/issue.service';
     DiscordBotService,
     DatabaseService,
     IssueService,
+    DashboardService,
   ],
 })
 export class DiscordbotModule {}
