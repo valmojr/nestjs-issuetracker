@@ -35,7 +35,7 @@ export class DashboardService {
       );
 
       await dashboardChannel.send({
-        content: user.discordId ? `<@${user.discordId}>` : user.username,
+        //content: user.discordId ? `<@${user.discordId}>` : user.username,
         embeds,
       });
     });
@@ -44,11 +44,11 @@ export class DashboardService {
 
   async spammer(client: Client, users: User[]) {
     users.forEach(async (user) => {
-      const privateChannel = (
+      const privateChannel = await (
         await client.users.fetch(user.discordId)
       ).createDM();
 
-      await wipePrivateChannel(await privateChannel);
+      await wipePrivateChannel(privateChannel);
 
       const userIssues = await this.issueService.getIssuesByAssignedUser(
         user.username,
@@ -56,9 +56,7 @@ export class DashboardService {
 
       userIssues.forEach(async (issue) => {
         try {
-          await (
-            await privateChannel
-          ).send({
+          await privateChannel.send({
             embeds: [await DashboarEmbedIssue(issue, users)],
             components: [
               new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -68,6 +66,9 @@ export class DashboardService {
           });
           this.logger.log(`Sending issue ${issue.title} to ${user.username}`);
         } catch (error) {
+          await privateChannel.send({
+            content: `Erro ao enviar issue ${issue.title} para ${user.username}, será que o servidor está online?`,
+          });
           this.logger.error(
             `error sending issue ${issue.title} to ${user.username}`,
           );
