@@ -10,6 +10,19 @@ import { IssueService } from '../Issue/issue.service';
 import { User } from '@prisma/client';
 import DashboarEmbedIssue from './util/DashboarEmbedIssue';
 import IntelButton from './util/Intel.button';
+import { Issue } from '../Issue/issueTypes';
+
+function sortIssuesByLabel(issues: Issue[], targetLabel: string): Issue[] {
+  const issuesWithoutLabel = issues.filter(
+    (issue) => !issue.labels.some((label) => label.name === targetLabel),
+  );
+
+  const issuesWithLabel = issues.filter((issue) =>
+    issue.labels.some((label) => label.name !== targetLabel),
+  );
+
+  return issuesWithoutLabel.concat(issuesWithLabel);
+}
 
 @Injectable()
 export class DashboardService {
@@ -23,38 +36,40 @@ export class DashboardService {
 
     await ChannelWiper(dashboardChannel);
 
-    users.forEach(async (user) => {
-      const userIssues = await this.issueService.getIssuesByAssignedUser(
-        user.username,
-      );
+    const onExecIssues = await this.issueService.getOnExecIssues();
+    //const improvementIssues = await this.issueService.getImprovementIssues();
 
-      const embeds = await Promise.all(
-        userIssues.map(async (issue) => {
-          return await DashboarEmbedIssue(issue, users);
-        }),
-      );
+    const showedIssues = [...onExecIssues];
 
-      await dashboardChannel.send({
-        //content: user.discordId ? `<@${user.discordId}>` : user.username,
-        embeds,
+    showedIssues.forEach(async (issue) => {
+      dashboardChannel.send({
+        embeds: [await DashboarEmbedIssue(issue, users)],
       });
     });
+
     this.logger.log('Dashboard updated');
   }
 
   async spammer(client: Client, users: User[]) {
     users.forEach(async (user) => {
-      const privateChannel = await (
-        await client.users.fetch(user.discordId)
-      ).createDM();
+      const privateChannel = await client.users.fetch(user.discordId);
 
-      await wipePrivateChannel(privateChannel);
+      await privateChannel.createDM();
+
+      try {
+        await wipePrivateChannel(await privateChannel.createDM());
+      } catch (error) {
+        this.logger.error(`Failed to wipe ${user.username}'s DMs`);
+      }
 
       const userIssues = await this.issueService.getIssuesByAssignedUser(
         user.username,
       );
 
-      userIssues.forEach(async (issue) => {
+      const sortedIssues = sortIssuesByLabel(userIssues, 'on-exec');
+
+      await privateChannel.deleteDM();
+      sortedIssues.forEach(async (issue) => {
         try {
           await privateChannel.send({
             embeds: [await DashboarEmbedIssue(issue, users)],
