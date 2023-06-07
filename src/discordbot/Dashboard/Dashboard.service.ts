@@ -8,7 +8,7 @@ import {
 import ChannelWiper, { wipePrivateChannel } from './util/ChannelWiper';
 import { IssueService } from '../Issue/issue.service';
 import { User } from '@prisma/client';
-import DashboarEmbedIssue from './util/DashboarEmbedIssue';
+import DashboardEmbedIssue from './util/DashboarEmbedIssue';
 import IntelButton from './util/Intel.button';
 import { Issue } from '../Issue/issueTypes';
 
@@ -43,7 +43,7 @@ export class DashboardService {
 
     showedIssues.forEach(async (issue) => {
       dashboardChannel.send({
-        embeds: [await DashboarEmbedIssue(issue, users)],
+        embeds: [await DashboardEmbedIssue(issue, users)],
       });
     });
 
@@ -72,7 +72,7 @@ export class DashboardService {
       sortedIssues.forEach(async (issue) => {
         try {
           await privateChannel.send({
-            embeds: [await DashboarEmbedIssue(issue, users)],
+            embeds: [await DashboardEmbedIssue(issue, users)],
             components: [
               new ActionRowBuilder<ButtonBuilder>().addComponents(
                 IntelButton(issue.id),
