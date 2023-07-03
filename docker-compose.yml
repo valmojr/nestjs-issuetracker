@@ -1,0 +1,41 @@
+services:
+  mongodb1:
+    image: mongo
+    container_name: mongodb1
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb1_data:/data/db
+
+  mongodb2:
+    image: mongo
+    container_name: mongodb2
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb2_data:/data/db
+
+  mongodb3:
+    image: mongo
+    container_name: mongodb3
+    ports:
+      - "27019:27017"
+    volumes:
+      - mongodb3_data:/data/db
+
+  nestjs_app:
+    build:
+      context: ./path/to/your/nestjs/app
+      dockerfile: Dockerfile
+    container_name: nestjs_app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongodb1
+      - mongodb2
+      - mongodb3
+
+volumes:
+  mongodb1_data:
+  mongodb2_data:
+  mongodb3_data:
