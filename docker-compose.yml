@@ -1,41 +1,30 @@
 services:
-  mongodb1:
-    image: mongo
-    container_name: mongodb1
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb1_data:/data/db
-
-  mongodb2:
-    image: mongo
-    container_name: mongodb2
-    ports:
-      - "27018:27017"
-    volumes:
-      - mongodb2_data:/data/db
-
-  mongodb3:
-    image: mongo
-    container_name: mongodb3
-    ports:
-      - "27019:27017"
-    volumes:
-      - mongodb3_data:/data/db
-
-  nestjs_app:
-    build:
-      context: ./path/to/your/nestjs/app
-      dockerfile: Dockerfile
-    container_name: nestjs_app
+  node_app:
+    image: node
+    container_name: node_app_container
+    restart: always
     ports:
       - "3000:3000"
+    volumes:
+      - ./app:/usr/src/app
+    environment:
+      - PGHOST=db
+      - PGPORT=5432
+      - PGDATABASE=mydb
+      - PGUSER=myuser
+      - PGPASSWORD=mypassword
     depends_on:
-      - mongodb1
-      - mongodb2
-      - mongodb3
+      - db
 
-volumes:
-  mongodb1_data:
-  mongodb2_data:
-  mongodb3_data:
+  db:
+    image: postgres
+    container_name: postgres_container
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=mydb
+      - POSTGRES_USER=myuser
+      - POSTGRES_PASSWORD=mypassword
