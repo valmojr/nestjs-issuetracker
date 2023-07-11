@@ -4,6 +4,6 @@ import { RepositoryController } from './repository.controller';
 
 @Module({
   controllers: [RepositoryController],
-  providers: [RepositoryService]
+  providers: [RepositoryService],
 })
 export class RepositoryModule {}
