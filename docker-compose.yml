@@ -1,12 +1,14 @@
 services:
   node_app:
-    image: node
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: node_app_container
     restart: always
     ports:
       - "3000:3000"
     volumes:
-      - ./app:/usr/src/app
+      - ./:/usr/src/app
     environment:
       - PGHOST=db
       - PGPORT=5432
